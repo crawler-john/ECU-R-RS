@@ -1,0 +1,32 @@
+1. support board
+# STM32F101 yuneng debug board
+	-WIFI
+		* WIFI_RST		PB15
+		* WIFI_STATUS	PA8
+		* WIFI_TX		USART2_RX(PA3)
+		* WIFI_RX		USART2_TX(PA2)
+		
+	-I2C(IO simulation)				-EEPROM
+		* EEPROM_WP		PB10
+		* EEPROM_SDA	PB1
+		* EEPROM_SCL	PB0
+	
+	-RFM300M
+		* SDIO			PB14
+		* CSB			PB13
+		* SCK			PB12
+		* FCSB			PB10
+		* GPIO3			PB11
+		* POWER			PB0
+
+	-MCP1316MT-29LE/OT DNP (看门狗)
+		*WATCHDOG_WDI	PB1
+		
+	-SYS_RST
+		* SYS_RST		PB9
+	
+	-LED
+		* LED_GREEN		PA11
+		
+
+		

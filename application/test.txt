@@ -1,0 +1,110 @@
+
+#if 0
+	while(1)
+	{
+		char UIDII[6];
+		inverter_info inverterInfo1;
+		inverterInfo1.uid[0] = 0x11;
+		inverterInfo1.uid[1] = 0x00;
+		inverterInfo1.uid[2] = 0x00;
+		inverterInfo1.uid[3] = 0x00;
+		inverterInfo1.uid[4] = 0x00;
+		inverterInfo1.uid[5] = 0x00;
+		UIDII[0] =0x88;
+		UIDII[1] =0x88;
+		UIDII[2] =0x88;
+		UIDII[3] =0x88;
+		UIDII[4] =0x88;
+		UIDII[5] =0x88;
+		
+		RFM300_Bind_Uid(ECUID6,(char *)inverterInfo1.uid,0,0);
+		delay_ms(1000);
+		RFM300_Heart_Beat(ECUID6,(char *)inverterInfo1.uid,(char *)&inverterInfo1.mos_status,&IO_Init_Status,&inverterInfo1.heart_rate,&inverterInfo1.off_times,&ver);
+		delay_ms(1000);
+		RFM300_IO_Init(ECUID6,(char *)inverterInfo1.uid,1,(char *)&inverterInfo1.mos_status,&IO_Init_Status,&inverterInfo1.heart_rate,&inverterInfo1.off_times,&ver);
+		delay_ms(1000);
+		SEGGER_RTT_printf(0, "222222\n");
+		//RFM300_Set_Uid(UIDII,(char *)inverterInfo1.uid,0,0,(char *)inverterInfo1.uid,&SaveChannel,&SaveRate);
+		delay_ms(1000);
+		delay_ms(3000);
+		
+	}
+#endif	
+
+#if 0
+	while(1)
+	{
+		unsigned char rss;
+		unsigned char eepromSenddata[32] = "HJJHJJHJJ HJJHJJHJJ HJJHJJHJJ ";
+	
+		unsigned char eepromRecvdata[32] = {'\0'};
+		Write_24L512_nByte(0x0001A0,32,eepromSenddata);
+		SEGGER_RTT_printf(0, "eepromSenddata:   %s\n",eepromSenddata);
+
+		Read_24L512_nByte(0x0001A0,32,eepromRecvdata);
+		SEGGER_RTT_printf(0, "eepromRecvdata:   %s\n",eepromRecvdata);
+		
+		rss =  ReadRssiValue(1);
+		SEGGER_RTT_printf(0, "ReadRssiValue:   %d\n",rss);
+		delay_ms(1000);
+		
+	}	
+#endif
+	
+#if 0
+	while(1)
+	{		
+		eepromSenddata[30]++;
+		if (eepromSenddata[30] > 'Z')
+		{
+			eepromSenddata[30] = 'A';
+		}
+		SendMessage(eepromSenddata,31);
+		SEGGER_RTT_printf(0, "SendMessage:%s\n",eepromSenddata);
+		
+		RF_leng = GetMessage(eepromRecvdata);
+		if(RF_leng)
+		{
+			SEGGER_RTT_printf(0, "RecvMessage 11111 :%s\n",eepromRecvdata);
+			RFM300H_SW = 0;
+			
+		}
+		delay_ms(1000);
+	}
+//#else
+	 while(1)
+ {  
+  delay_ms(20);
+  RF_leng = GetMessage(eepromRecvdata);
+  if(RF_leng)
+  {
+		SEGGER_RTT_printf(0, "RECVMessage:%s\n",eepromRecvdata);
+		RFM300H_SW = 0;
+		delay_ms(1800);
+		SendMessage(eepromRecvdata,31);
+		SEGGER_RTT_printf(0, "SendMessage:%s\n",eepromRecvdata);
+  
+  }
+ 
+ 
+ }
+	
+#endif 
+	/*
+	while(1)
+	{	
+		LED_on();	
+		delay_ms(1000);
+		LED_off();	
+		delay_ms(1000);			
+	}
+	*/
+	
+	/*	
+	while(1)
+	{	
+		ret = WIFI_SendData((char *)eepromSenddata, 10);
+		SEGGER_RTT_printf(0, "ret = %d\n",ret);
+		delay_ms(1000);		
+	}
+	*/	
