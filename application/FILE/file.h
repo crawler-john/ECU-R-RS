@@ -20,9 +20,11 @@
 /*  Definitions                                                              */
 /*****************************************************************************/
 #define VERSION_ECU_RS    					"101"
-#define SOFEWARE_VERSION						"RS1.2"
+#define SOFEWARE_VERSION_LENGTH			5
+#define SOFEWARE_VERSION						"RS1.3"
 //地址
 #define  ADDRESS_Test 							0x000000			//用于板子收发测试    			10字节
+#define  ADDRESS_RebootNum					0x00000a			//用于记录重启次数					4个字节
 #define  ADDRESS_ECUID 							0x000010			//ECU-RS ID   需要我们转换	6字节
 #define  ADDRESS_CHANNEL 						0x000020			//优化器配置信息--信道			2字节
 #define  ADDRESS_IO_INIT_STATUS 		0x000030			//IO上电初始化状态					1字节
@@ -64,5 +66,9 @@ int Read_UID_Bind(char *BindFlag,int n);
 
 int Write_UID_Channel(char channel,int n);
 int Read_UID_Channel(char *channel,int n);
+
+int Write_rebootNum(unsigned int num);
+int Read_rebootNum(unsigned int *num);
+
 
 #endif /*__FILE_H__*/

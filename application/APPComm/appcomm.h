@@ -39,9 +39,9 @@ typedef enum
 //解析收到的数据
 int Resolve_RecvData(char *RecvData,int* Data_Len,int* Command_Id);
 //01 命令回应
-void APP_Response_BaseInfo(unsigned char *ID,char *ECU_NO,char *TYPE,char SIGNAL_LEVEL,char *SIGNAL_CHANNEL,int Length,char * Version);
+void APP_Response_BaseInfo(unsigned char *ID,char *ECU_NO,char *TYPE,char SIGNAL_LEVEL,char *SIGNAL_CHANNEL,int Length,char * Version,inverter_info *inverter,int validNum);
 //02 命令回应
-void APP_Response_SystemInfo(unsigned char *ID,unsigned char mapflag,inverter_info *inverter,int vaildNum);
+void APP_Response_SystemInfo(unsigned char *ID,unsigned char mapflag,inverter_info *inverter,int validNum);
 //03 命令回应
 void APP_Response_SetNetwork(unsigned char *ID,unsigned char result);
 //04 命令回应

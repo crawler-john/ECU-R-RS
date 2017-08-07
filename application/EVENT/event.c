@@ -108,13 +108,16 @@ int HardwareTest(char testItem)
 
 void process_WIFIEvent(void)
 {
+	
 	//检测WIFI事件
 	WIFI_GetEvent(&messageLen,ID);
 	//判断是否有WIFI接收事件
 	if(WIFI_Recv_Event == 1)
 	{
+		SEGGER_RTT_printf(0,"WIFI_Recv_Event start\n");
 		process_WIFI(ID);
 		WIFI_Recv_Event = 0;
+		SEGGER_RTT_printf(0,"WIFI_Recv_Event end\n");
 	}
 
 }
@@ -126,15 +129,20 @@ void process_HeartBeatEvent(void)
 	int ret = 0;
 	//SEGGER_RTT_printf(0, "COMM_Timeout_Event \n");
 	//发送心跳包
-	if(	vaildNum >0	)
+	if(	validNum >0	)
 	{
 		//SEGGER_RTT_printf(0, "RFM300_Heart_Beat %02x%02x%02x%02x%02x%02x\n",inverterInfo[curSequence].uid[0],inverterInfo[curSequence].uid[1],inverterInfo[curSequence].uid[2],inverterInfo[curSequence].uid[3],inverterInfo[curSequence].uid[4],inverterInfo[curSequence].uid[5]);
+
+		if(curSequence >= validNum)		//当轮训的序号大于最后一台时，更换到第0台
+		{
+			curSequence = 0;
+		}
 		
 		process_WIFIEvent();
 		
 		//先保存上一轮的心跳
 		pre_heart_rate = inverterInfo[curSequence].heart_rate;
-		ret = RFM300_Heart_Beat(ECUID6,(char *)inverterInfo[curSequence].uid,(status_t *)&inverterInfo[curSequence].status,&inverterInfo[curSequence].heart_rate,&inverterInfo[curSequence].off_times,&ver);
+		ret = RFM300_Heart_Beat(ECUID6,&inverterInfo[curSequence]);
 	
 		process_WIFIEvent();
 
@@ -143,7 +151,7 @@ void process_HeartBeatEvent(void)
 			//查看绑定标志位，如果绑定未成功，尝试绑定。
 			if(inverterInfo[curSequence].status.bind_status != 1)
 			{
-				ret = RFM300_Bind_Uid(ECUID6,(char *)inverterInfo[curSequence].uid,0,0);
+				ret = RFM300_Bind_Uid(ECUID6,(char *)inverterInfo[curSequence].uid,0,0,&ver);
 				
 				process_WIFIEvent();
 
@@ -188,13 +196,13 @@ void process_HeartBeatEvent(void)
 			{
 				if(IO_Init_Status == 0)		//需要关闭心跳功能
 				{
-					RFM300_IO_Init(ECUID6,(char *)inverterInfo[curSequence].uid,0x02,(status_t *)&inverterInfo[curSequence].status,&inverterInfo[curSequence].heart_rate,&inverterInfo[curSequence].off_times,&ver);
+					RFM300_Status_Init(ECUID6,(char *)inverterInfo[curSequence].uid,0x02,0x00,&inverterInfo[curSequence].status);
 				}
 			}else					//心跳功能关闭
 			{
 				if(IO_Init_Status == 1)		//需要打开心跳功能
 				{
-					RFM300_IO_Init(ECUID6,(char *)inverterInfo[curSequence].uid,0x01,(status_t *)&inverterInfo[curSequence].status,&inverterInfo[curSequence].heart_rate,&inverterInfo[curSequence].off_times,&ver);
+					RFM300_Status_Init(ECUID6,(char *)inverterInfo[curSequence].uid,0x01,0x00,&inverterInfo[curSequence].status);
 				}
 			}
 
@@ -223,7 +231,7 @@ void process_HeartBeatEvent(void)
 				setChannel(inverterInfo[curSequence].channel);
 				
 				//发送更改信道报文
-				ret = RFM300_Bind_Uid(ECUID6,(char *)inverterInfo[curSequence].uid,Channel_char,0);
+				ret = RFM300_Bind_Uid(ECUID6,(char *)inverterInfo[curSequence].uid,Channel_char,0,&ver);
 				if(ret == 1)	//设置信道成功
 				{
 					if(Write_UID_Channel(Channel_char,(curSequence+1)) == 0)
@@ -239,19 +247,17 @@ void process_HeartBeatEvent(void)
 		}
 		
 		curSequence++;
-		if(curSequence >= vaildNum)		//当轮训的序号大于最后一台时，更换到第0台
-		{
-			curSequence = 0;
-		}
+		
 		
 		//连续通讯不上1小时   表示关机状态
 		if(comm_failed_Num >= PERIOD_NUM)
 		{
 			//SEGGER_RTT_printf(0, "comm_failed_Num:%d   \n",comm_failed_Num);
-			for(curSequence = 0;curSequence < vaildNum;curSequence++)
+			for(curSequence = 0;curSequence < validNum;curSequence++)
 			{
 				inverterInfo[curSequence].restartNum = 0;
 			}
+			comm_failed_Num = 0;
 			curSequence = 0;
 		}
 		
@@ -272,7 +278,7 @@ void process_WIFI(unsigned char * ID)
 				//获取基本信息
 				//获取信号强度
 				Signal_Level = ReadRssiValue(1);
-				APP_Response_BaseInfo(ID,ECUID12,VERSION_ECU_RS,Signal_Level,Signal_Channel,5,SOFEWARE_VERSION);
+				APP_Response_BaseInfo(ID,ECUID12,VERSION_ECU_RS,Signal_Level,Signal_Channel,SOFEWARE_VERSION_LENGTH,SOFEWARE_VERSION,inverterInfo,validNum);
 				break;
 					
 			case COMMAND_SYSTEMINFO:			//获取系统信息			APS11002602406000000009END
@@ -281,7 +287,7 @@ void process_WIFI(unsigned char * ID)
 				if(!memcmp(&WIFI_RecvData[11],ECUID12,12))
 				{	//匹配成功进行相应的操作
 					SEGGER_RTT_printf(0, "COMMAND_SYSTEMINFO  Mapping\n");
-					APP_Response_SystemInfo(ID,0x00,inverterInfo,vaildNum);
+					APP_Response_SystemInfo(ID,0x00,inverterInfo,validNum);
 				}	else
 				{	//不匹配
 					SEGGER_RTT_printf(0, "COMMAND_SYSTEMINFO   Not Mapping");
@@ -295,13 +301,11 @@ void process_WIFI(unsigned char * ID)
 				if(!memcmp(&WIFI_RecvData[11],ECUID12,12))
 				{	//匹配成功进行相应的操作
 					int AddNum = 0;
-					
-							
 					AddNum = (messageLen - 29)/6;
 					SEGGER_RTT_printf(0, "COMMAND_SETNETWORK   Mapping   %d\n",AddNum);
-					//将数据写入EEPROM
-					add_inverter(inverterInfo,AddNum,(char *)&WIFI_RecvData[26]);
 					APP_Response_SetNetwork(ID,0x00);
+					//将数据写入EEPROM
+					add_inverter(inverterInfo,AddNum,(char *)&WIFI_RecvData[26]);	
 					init_inverter(inverterInfo);
 					//进行一些绑定操作
 					LED_off();
@@ -395,7 +399,7 @@ void process_UART1Event(void)
 	char USART1_ECUID12[13] = {'\0'};
 	char USART1_ECUID6[7] = {'\0'};
 	char USART1_UID_NUM[2] = {0x00,0x00};
-	char Channel[2] = "02";
+	char Channel[2] = "01";
 	char ret =0;
 	char testItem = 0;
 	int AddNum = 0;
@@ -419,7 +423,7 @@ void process_UART1Event(void)
 					//设置WIFI密码
 					if(ret != 0) 	USART1_Response_SET_ID(ret);
 					Write_CHANNEL(Channel);
-					
+					Write_rebootNum(0);
 					IO_Init_Status= 1;
 					Write_IO_INIT_STATU(&IO_Init_Status);
 					//设置WIFI密码
@@ -480,6 +484,7 @@ void process_UART1Event(void)
 			case COMMAND_FACTORY:	//恢复到刚出厂的状态
 				SEGGER_RTT_printf(0, "WIFI_Recv_Event%d %s\n",COMMAND_FACTORY,USART1_RecvData);
 				ret = Write_UID_NUM(USART1_UID_NUM);
+				Write_rebootNum(0);
 				USART1_Response_FACTORY(ret);
 				init_inverter(inverterInfo);
 			
@@ -510,15 +515,15 @@ void process_KEYEvent(void)
 }
 
 //无线复位处理
-void process_WIFI_RST(void)
+int process_WIFI_RST(void)
 {
-	int ret =0,i = 0;
+	int ret =1,i = 0;
 	SEGGER_RTT_printf(0, "process_WIFI_RST Start\n");
 	for(i = 0;i<3;i++)
 	{
 		ret = WIFI_SoftReset();
 		if(ret == 0) break;
 	}
-	
 	SEGGER_RTT_printf(0, "process_WIFI_RST End\n");
+	return ret;
 }

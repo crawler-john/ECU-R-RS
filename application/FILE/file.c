@@ -221,3 +221,23 @@ int Read_UID_Channel(char *channel,int n)
 	Read_24L512_nByte((ADDRESS_UID_CHANNEL+0x08*(n-1)+7),1, (unsigned char *)channel);
 	return 0;
 }
+
+int Write_rebootNum(unsigned int num)
+{
+	unsigned char count[4] = {'\0'};
+	count[0] = (num/16777216)%256;
+	count[1] = (num/65535)%256;
+	count[2] = (num/256)%256;
+	count[3] = num%256;
+	Write_24L512_nByte(ADDRESS_RebootNum,4,count);
+	return 0;
+}
+
+int Read_rebootNum(unsigned int *num)
+{
+	unsigned char count[4] = {'\0'};
+	Read_24L512_nByte(ADDRESS_RebootNum,4, count);
+	*num = count[3] + (count[2] * 256) + (count[2] * 65535) + (count[2] * 16777216);
+	return 0;
+
+}

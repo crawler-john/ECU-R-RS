@@ -27,7 +27,7 @@ extern char Signal_Channel[3];
 extern char Channel_char;
 extern char IO_Init_Status;			//IO初始状态
 extern char ver;						//优化器版本号
-extern int vaildNum;				//当前有效台数
+extern int validNum;				//当前有效台数
 extern int curSequence;		//心跳轮训机器号
 extern inverter_info inverterInfo[MAXINVERTERCOUNT];
 extern int Data_Len;
@@ -47,6 +47,6 @@ void process_HeartBeatEvent(void);
 void process_WIFI(unsigned char * ID);
 void process_UART1Event(void);
 void process_KEYEvent(void);
-void process_WIFI_RST(void);
+int process_WIFI_RST(void);
 
 #endif /*__EVENT_H__*/

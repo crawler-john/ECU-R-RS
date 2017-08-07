@@ -136,7 +136,6 @@ void TIM2_IRQHandler(void)   //TIM2中断
 			timeout_WIFI_RST_Time++;
 			//产生超时时间
 			COMM_Timeout_Event = 1;
-
 			timeout_num = 0;
 			if(ledSwitch == 1)
 			{
